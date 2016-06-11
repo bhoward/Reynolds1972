@@ -51,7 +51,12 @@ object Main3 extends App {
     PrimRec(IntConst(1), Var("times")),
     body))
 
-  val test = fib(Appl(Var("fib"), IntConst(4)))
+  val test = fib(Appl(Var("fib"), IntConst(5)))
 
   println(test.interpret)
+  
+  val start = System.currentTimeMillis
+  for (_ <- 1 to 100) test.interpret
+  val end = System.currentTimeMillis
+  println((end - start) / 100)
 }
