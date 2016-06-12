@@ -16,14 +16,14 @@ object Exp {
       eval(AppCont(BoolVal(b)), e, k)
     case Var(name) =>
       eval(AppCont(e.get(name)), e, k)
-    case Appl(opr, opnd) =>
-      eval(opr, e, EvOpn(a.asInstanceOf[Appl], e, k))
-    case Lambda(param, body) =>
-      eval(AppCont(Closure(a.asInstanceOf[Lambda], e)), e, k)
-    case Cond(premise, conclusion, alternative) =>
-      eval(premise, e, Branch(a.asInstanceOf[Cond], e, k))
-    case LetRec(dvar, dexp, body) =>
-      eval(body, Rec(a.asInstanceOf[LetRec], e), k)
+    case aa @ Appl(opr, opnd) =>
+      eval(opr, e, EvOpn(aa, e, k))
+    case aa @ Lambda(param, body) =>
+      eval(AppCont(Closure(aa, e)), e, k)
+    case aa @ Cond(premise, conclusion, alternative) =>
+      eval(premise, e, Branch(aa, e, k))
+    case aa @ LetRec(dvar, dexp, body) =>
+      eval(body, Rec(aa, e), k)
     case AppCont(v) =>
       k match {
         case Fin =>
