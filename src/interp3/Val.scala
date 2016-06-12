@@ -38,3 +38,7 @@ case class Eq2(arg: Val) extends FunVal {
     case _ => sys.error("equal applied to incompatible arguments")
   }
 }
+
+case class Escf(cn: Cont) extends FunVal {
+  override def apply(a: Val, k: Cont): TailRec[Val] = tailcall(cn(a))
+}

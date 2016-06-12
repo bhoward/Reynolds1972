@@ -24,6 +24,8 @@ object Exp {
       eval(premise, e, Branch(aa, e, k))
     case aa @ LetRec(dvar, dexp, body) =>
       eval(body, Rec(aa, e), k)
+    case Escp(escv, body) =>
+      eval(body, Simp(escv, Escf(k), e), k)
     case AppCont(v) =>
       k match {
         case Fin =>
@@ -40,6 +42,8 @@ object Exp {
               eval(AppCont(Eq2(v)), e, next)
             case Eq2(arg) =>
               eval(AppCont(equal(arg, v)), e, next)
+            case Escf(cn) =>
+              eval(AppCont(v), e, cn)
             case _ =>
               sys.error("apply of a non-function")
           }
@@ -79,3 +83,6 @@ case class Cond(premise: Exp, conclusion: Exp, alternative: Exp) extends Exp
 case class LetRec(dvar: Var, dexp: Lambda, body: Exp) extends Exp
 
 case class AppCont(v: Val) extends Exp
+
+// Section 9: Escape Expressions
+case class Escp(escv: Var, body: Exp) extends Exp

@@ -68,3 +68,9 @@ case class LetRec(dvar: Var, dexp: Lambda, body: Exp) extends Exp {
     tailcall(body.eval(e2, k))
   }
 }
+
+// Section 9: Escape Expressions
+case class Escp(escv: Var, body: Exp) extends Exp {
+  override def eval(e: Env, k: Cont): TailRec[Val] =
+    tailcall(body.eval(e.ext(escv, FunVal { case (a, _) => k(a) }), k))
+}
