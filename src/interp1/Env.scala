@@ -1,5 +1,7 @@
 package interp1
 
+import interp._
+
 case class Env(fun: Var => Val) {
   def apply(x: Var): Val = fun(x)
 

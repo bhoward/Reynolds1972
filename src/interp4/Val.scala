@@ -1,15 +1,9 @@
 package interp4
 
+import interp._
+
 import scala.util.control.TailCalls._
 
-trait Val {
-  def apply(x: Val, k: Cont): TailRec[Val] = sys.error("apply of a non-function")
-}
-
-case class IntVal(n: Int) extends Val
-
-case class BoolVal(b: Boolean) extends Val
-
-case class FunVal(fun: (Val, Cont) => TailRec[Val]) extends Val {
-  override def apply(x: Val, k: Cont): TailRec[Val] = tailcall(fun(x, k))
+case class FVal(fun: (Val, Cont) => TailRec[Val]) extends FunVal {
+  def apply(x: Val, k: Cont): TailRec[Val] = tailcall(fun(x, k))
 }

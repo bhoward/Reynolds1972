@@ -1,21 +1,19 @@
 package interp4
 
+import interp._
+
 import scala.util.control.TailCalls._
 
-trait Exp {
-  def interpret: Val = eval(Exp.initEnv, Cont { a => done(a) }).result
+object Interp extends Interp {
+  def apply(a: Exp): Val = eval(a, initEnv, Cont { done(_) }).result
 
-  def eval(e: Env, k: Cont): TailRec[Val]
-}
-
-object Exp {
   val initEnv: Env = Env {
-    case Var("succ") => FunVal {
+    case Var("succ") => FVal {
       case (IntVal(n), k) => tailcall(k(IntVal(n + 1)))
       case _ => sys.error("succ applied to non-integral argument")
     }
-    case Var("equal") => FunVal {
-      case (a, k) => tailcall(k(FunVal {
+    case Var("equal") => FVal {
+      case (a, k) => tailcall(k(FVal {
         case (b, k) => tailcall(k((a, b) match {
           case (IntVal(n1), IntVal(n2)) => BoolVal(n1 == n2)
           case (BoolVal(b1), BoolVal(b2)) => BoolVal(b1 == b2)
@@ -24,53 +22,34 @@ object Exp {
       }))
     }
   }
-}
 
-case class IntConst(n: Int) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(k(IntVal(n)))
-}
-
-case class BoolConst(b: Boolean) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(k(BoolVal(b)))
-}
-
-case class Var(name: String) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(k(e(this)))
-}
-
-case class Appl(opr: Exp, opnd: Exp) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(opr.eval(e, Cont { f => opnd.eval(e, Cont { a => f(a, k) }) }))
-}
-
-case class Lambda(param: Var, body: Exp) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(k(evlambda(e)))
-
-  def evlambda(e: Env): Val = FunVal {
-    case (a, k) => body.eval(e.ext(param, a), k)
+  def eval(a: Exp, e: Env, k: Cont): TailRec[Val] = a match {
+    case IntConst(n) =>
+      tailcall(k(IntVal(n)))
+    case BoolConst(b) =>
+      tailcall(k(BoolVal(b)))
+    case aa @ Var(name) =>
+      tailcall(k(e(aa)))
+    case Appl(opr, opnd) =>
+      tailcall(eval(opr, e, Cont { f => eval(opnd, e, Cont { f.asInstanceOf[FVal](_, k) }) }))
+    case aa @ Lambda(param, body) =>
+      tailcall(k(evlambda(aa, e)))
+    case Cond(premise, conclusion, alternative) =>
+      tailcall(eval(premise, e, Cont {
+        case BoolVal(true) => eval(conclusion, e, k)
+        case BoolVal(false) => eval(alternative, e, k)
+        case _ => sys.error("conditional with non-boolean premise")
+      }))
+    case LetRec(dvar, dexp, body) =>
+      def e2: Env = Env {
+        case x => if (x.name == dvar.name) evlambda(dexp, e2) else e(x)
+      }
+      tailcall(eval(body, e2, k))
+    case Escp(escv, body) =>
+      tailcall(eval(body, e.ext(escv, FVal { case (a, _) => k(a) }), k))
   }
-}
 
-case class Cond(premise: Exp, conclusion: Exp, alternative: Exp) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = tailcall(premise.eval(e, Cont { b =>
-    b match {
-      case BoolVal(true) => conclusion.eval(e, k)
-      case BoolVal(false) => alternative.eval(e, k)
-      case _ => sys.error("conditional with non-boolean premise")
-    }
-  }))
-}
-
-case class LetRec(dvar: Var, dexp: Lambda, body: Exp) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] = {
-    def e2: Env = Env {
-      case x => if (x.name == dvar.name) dexp.evlambda(e2) else e(x)
-    }
-    tailcall(body.eval(e2, k))
+  def evlambda(lam: Lambda, e: Env): Val = FVal {
+    case (a, k) => eval(lam.body, e.ext(lam.param, a), k)
   }
-}
-
-// Section 9: Escape Expressions
-case class Escp(escv: Var, body: Exp) extends Exp {
-  override def eval(e: Env, k: Cont): TailRec[Val] =
-    tailcall(body.eval(e.ext(escv, FunVal { case (a, _) => k(a) }), k))
 }

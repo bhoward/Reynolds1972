@@ -1,6 +1,6 @@
 package demo
 
-object Main3 extends App {
+object Main extends App {
   import interp._
 
   def Let(v: Var, x: Exp, body: Exp): Exp = Appl(Lambda(v, body), x)
@@ -53,10 +53,27 @@ object Main3 extends App {
 
   val test = fib(Appl(Var("fib"), IntConst(5)))
 
-  println(interp3.Interp(test))
+  def run(i: Interp): Unit = {
+    println(i(test).show)
+
+    val start = System.currentTimeMillis
+    for (_ <- 1 to 100) i(test)
+    val end = System.currentTimeMillis
+    println((end - start) / 100 + " msec")
+  }
   
-  val start = System.currentTimeMillis
-  for (_ <- 1 to 100) interp3.Interp(test)
-  val end = System.currentTimeMillis
-  println((end - start) / 100)
+  println("Interpreter 1 -- original")
+  run(interp1.Interp)
+  
+  println("Interpreter 2 -- no HO functions")
+  run(interp2.Interp)
+  
+  println("Interpreter 3 -- continuations and no HO functions")
+  run(interp3.Interp)
+  
+  println("Interpreter 3a -- same as 3 but tail-recursive instead of trampolined")
+  run(interp3a.Interp)
+  
+  println("Interpreter 4 -- continuations and HO functions (trampolined)")
+  run(interp4.Interp)
 }
