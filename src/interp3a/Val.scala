@@ -1,12 +1,6 @@
 package interp3a
 
-trait Val
-
-case class IntVal(n: Int) extends Val
-
-case class BoolVal(b: Boolean) extends Val
-
-trait FunVal extends Val
+import interp._
 
 case class Closure(lam: Lambda, en: Env) extends FunVal
 

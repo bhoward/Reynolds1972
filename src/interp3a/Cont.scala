@@ -1,5 +1,7 @@
 package interp3a
 
+import interp._
+
 trait Cont
 
 case object Fin extends Cont

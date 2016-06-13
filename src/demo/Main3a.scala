@@ -1,7 +1,7 @@
 package demo
 
 object Main3a extends App {
-  import interp3a._
+  import interp._
 
   def Let(v: Var, x: Exp, body: Exp): Exp = Appl(Lambda(v, body), x)
 
@@ -53,10 +53,10 @@ object Main3a extends App {
 
   val test = fib(Appl(Var("fib"), IntConst(5)))
 
-  println(test.interpret)
+  println(interp3a.Interp(test))
   
   val start = System.currentTimeMillis
-  for (_ <- 1 to 100) test.interpret
+  for (_ <- 1 to 100) interp3a.Interp(test)
   val end = System.currentTimeMillis
   println((end - start) / 100)
 }

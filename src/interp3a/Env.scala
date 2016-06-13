@@ -1,5 +1,7 @@
 package interp3a
 
+import interp._
+
 trait Env {
   def get(name: String): Val
 }
