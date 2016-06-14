@@ -74,6 +74,11 @@ object Main extends App {
   println("Interpreter 3a -- same as 3 but tail-recursive instead of trampolined")
   run(interp3a.Interp)
   
+  println("Interpreter 3b -- same as 3a but uses enums and named/default params instead of Either")
+  run(interp3a.Interp)
+  
   println("Interpreter 4 -- continuations and HO functions (trampolined)")
   run(interp4.Interp)
 }
+
+// TODO implement a parser, test escape functions, then add assignments
