@@ -46,10 +46,28 @@ object Interp extends Interp {
       tailcall(eval(lam.body, Simp(lam.param, v, en), k))
     case Succ =>
       tailcall(cont(v.succ, k))
+    case Pred =>
+      tailcall(cont(v.pred, k))
     case Eq1 =>
       tailcall(cont(Eq2(v), k))
     case Eq2(arg) =>
       tailcall(cont(arg.equal(v), k))
+    case Plus1 =>
+      tailcall(cont(Plus2(v), k))
+    case Plus2(arg) =>
+      tailcall(cont(arg.plus(v), k))
+    case Minus1 =>
+      tailcall(cont(Minus2(v), k))
+    case Minus2(arg) =>
+      tailcall(cont(arg.minus(v), k))
+    case Times1 =>
+      tailcall(cont(Times2(v), k))
+    case Times2(arg) =>
+      tailcall(cont(arg.times(v), k))
+    case Divide1 =>
+      tailcall(cont(Divide2(v), k))
+    case Divide2(arg) =>
+      tailcall(cont(arg.divide(v), k))
     case Escf(cn) =>
       tailcall(cont(v, cn))
     case _ =>

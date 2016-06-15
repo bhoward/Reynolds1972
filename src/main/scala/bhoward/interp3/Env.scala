@@ -9,7 +9,12 @@ trait Env {
 case object Init extends Env {
   def get(name: String): Val = name match {
     case "succ" => Succ
-    case "equal" => Eq1
+    case "pred" => Pred
+    case "=" => Eq1
+    case "+" => Plus1
+    case "-" => Minus1
+    case "*" => Times1
+    case "/" => Divide1
   }
 }
 

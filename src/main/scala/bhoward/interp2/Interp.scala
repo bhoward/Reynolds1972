@@ -33,10 +33,28 @@ object Interp extends Interp {
       eval(lam.body, Simp(lam.param, v, en))
     case Succ =>
       v.succ
+    case Pred =>
+      v.pred
     case Eq1 =>
       Eq2(v)
     case Eq2(arg) =>
       arg.equal(v)
+    case Plus1 =>
+      Plus2(v)
+    case Plus2(arg) =>
+      arg.plus(v)
+    case Minus1 =>
+      Minus2(v)
+    case Minus2(arg) =>
+      arg.minus(v)
+    case Times1 =>
+      Times2(v)
+    case Times2(arg) =>
+      arg.times(v)
+    case Divide1 =>
+      Divide2(v)
+    case Divide2(arg) =>
+      arg.divide(v)
     case _ =>
       sys.error("apply of non-function")
   }

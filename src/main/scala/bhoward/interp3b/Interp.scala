@@ -46,10 +46,28 @@ object Interp extends Interp {
               eval(E, lam.body, Simp(lam.param, v, en), next)
             case Succ =>
               eval(C, v=v.succ, k=next)
+            case Pred =>
+              eval(C, v=v.pred, k=next)
             case Eq1 =>
               eval(C, v=Eq2(v), k=next)
             case Eq2(arg) =>
               eval(C, v=arg.equal(v), k=next)
+            case Plus1 =>
+              eval(C, v=Plus2(v), k=next)
+            case Plus2(arg) =>
+              eval(C, v=arg.plus(v), k=next)
+            case Minus1 =>
+              eval(C, v=Minus2(v), k=next)
+            case Minus2(arg) =>
+              eval(C, v=arg.minus(v), k=next)
+            case Times1 =>
+              eval(C, v=Times2(v), k=next)
+            case Times2(arg) =>
+              eval(C, v=arg.times(v), k=next)
+            case Divide1 =>
+              eval(C, v=Divide2(v), k=next)
+            case Divide2(arg) =>
+              eval(C, v=arg.divide(v), k=next)
             case Escf(cn) =>
               eval(C, v=v, k=cn)
             case _ =>

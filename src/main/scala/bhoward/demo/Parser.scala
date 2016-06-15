@@ -61,6 +61,10 @@ object Parser {
   val defdecl = P[Exp => Exp](("def" ~/ ident ~ "(" ~ ident ~ ")" ~ "=" ~ exp).map {
     case (dvar, dparam, dbody) => body => LetRec(dvar, Lambda(dparam, dbody), body)
   })
+  
+  val escdecl = P[Exp => Exp](("esc" ~/ ident).map {
+    case escv => body => Escp(escv, body)
+  })
 
   val decls = P[Exp => Exp]((valdecl | defdecl).rep.map {
     case ds => body => ds.foldRight(body)(_ apply _)

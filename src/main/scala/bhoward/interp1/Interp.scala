@@ -7,7 +7,12 @@ object Interp extends Interp {
 
   val initEnv: Env = Env {
     case Var("succ") => FVal { _.succ }
-    case Var("equal") => FVal { v => FVal { v equal _ } }
+    case Var("pred") => FVal { _.pred }
+    case Var("=") => FVal { v => FVal { v equal _ } }
+    case Var("+") => FVal { v => FVal { v plus _ } }
+    case Var("-") => FVal { v => FVal { v minus _ } }
+    case Var("*") => FVal { v => FVal { v times _ } }
+    case Var("/") => FVal { v => FVal { v divide _ } }
   }
 
   def eval(a: Exp, e: Env): Val = a match {

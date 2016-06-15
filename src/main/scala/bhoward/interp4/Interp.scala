@@ -9,16 +9,34 @@ object Interp extends Interp {
 
   val initEnv: Env = Env {
     case Var("succ") => FVal {
-      case (IntVal(n), k) => tailcall(k(IntVal(n + 1)))
-      case _ => sys.error("succ applied to non-integral argument")
+      case (v, k) => tailcall(k(v.succ))
     }
-    case Var("equal") => FVal {
-      case (a, k) => tailcall(k(FVal {
-        case (b, k) => tailcall(k((a, b) match {
-          case (IntVal(n1), IntVal(n2)) => BoolVal(n1 == n2)
-          case (BoolVal(b1), BoolVal(b2)) => BoolVal(b1 == b2)
-          case _ => sys.error("equal applied to incompatible arguments")
-        }))
+    case Var("pred") => FVal {
+      case (v, k) => tailcall(k(v.pred))
+    }
+    case Var("=") => FVal {
+      case (v, k) => tailcall(k(FVal {
+        case (w, k) => tailcall(k(v equal w))
+      }))
+    }
+    case Var("+") => FVal {
+      case (v, k) => tailcall(k(FVal {
+        case (w, k) => tailcall(k(v plus w))
+      }))
+    }
+    case Var("-") => FVal {
+      case (v, k) => tailcall(k(FVal {
+        case (w, k) => tailcall(k(v minus w))
+      }))
+    }
+    case Var("*") => FVal {
+      case (v, k) => tailcall(k(FVal {
+        case (w, k) => tailcall(k(v times w))
+      }))
+    }
+    case Var("/") => FVal {
+      case (v, k) => tailcall(k(FVal {
+        case (w, k) => tailcall(k(v divide w))
       }))
     }
   }
