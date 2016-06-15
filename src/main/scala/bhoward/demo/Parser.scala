@@ -66,7 +66,7 @@ object Parser {
     case escv => body => Escp(escv, body)
   })
 
-  val decls = P[Exp => Exp]((valdecl | defdecl).rep.map {
+  val decls = P[Exp => Exp]((valdecl | defdecl | escdecl).rep.map {
     case ds => body => ds.foldRight(body)(_ apply _)
   })
 

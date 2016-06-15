@@ -31,6 +31,9 @@ object Main extends App {
   
   println("Interpreter 4 -- continuations and HO functions (trampolined)")
   run(bhoward.interp4.Interp)
+  
+  val test2 = Parser("6 * (let esc e def f(n) = if (n = 1) then e(7) else if (n / 2 * 2 = n) then f(n / 2) else f(3*n + 1) in f(27))")
+  println(bhoward.interp3.Interp(test2).show)
 }
 
-// TODO add ops to interpreters, use parser, test escape functions, then add assignments
+// TODO add assignments
