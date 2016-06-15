@@ -81,4 +81,4 @@ object Main extends App {
   run(bhoward.interp4.Interp)
 }
 
-// TODO implement a parser, test escape functions, then add assignments
+// TODO add ops to interpreters, use parser, test escape functions, then add assignments
