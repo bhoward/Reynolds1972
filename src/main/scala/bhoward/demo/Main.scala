@@ -27,13 +27,16 @@ object Main extends App {
   run(bhoward.interp3a.Interp)
   
   println("Interpreter 3b -- same as 3a but uses enums and named/default params instead of Either")
-  run(bhoward.interp3a.Interp)
+  run(bhoward.interp3b.Interp)
   
   println("Interpreter 4 -- continuations and HO functions (trampolined)")
   run(bhoward.interp4.Interp)
   
   val test2 = Parser("6 * (let esc e def f(n) = if (n = 1) then e(7) else if (n / 2 * 2 = n) then f(n / 2) else f(3*n + 1) in f(27))")
   println(bhoward.interp3.Interp(test2).show)
+  println(bhoward.interp3a.Interp(test2).show)
+  println(bhoward.interp3b.Interp(test2).show)
+  println(bhoward.interp4.Interp(test2).show)
 }
 
 // TODO add assignments
