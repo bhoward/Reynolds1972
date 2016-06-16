@@ -39,7 +39,7 @@ object Parser {
   val mulexp = P[Exp]((app ~ (StringIn("*", "/").! ~ app).rep).map {
     case (first, rest) => combine(first, rest)
   })
-  
+
   val app = P[Exp]((factor ~ ("(" ~/ exp ~ ")").rep).map {
     case (a, bs) => bs.foldLeft(a)(Appl(_, _))
   })
@@ -54,27 +54,75 @@ object Parser {
     case (param, body) => Lambda(param, body)
   })
 
-  val valdecl = P[Exp => Exp](("val" ~/ ident ~ "=" ~ exp).map {
-    case (dvar, dexp) => body => Appl(Lambda(dvar, body), dexp)
+  val valdecl = P[Exp](("val" ~/ ident ~ "=" ~ exp ~ "in" ~ exp).map {
+    case (dvar, dexp, body) => Appl(Lambda(dvar, body), dexp)
   })
 
-  val defdecl = P[Exp => Exp](("def" ~/ ident ~ "(" ~ ident ~ ")" ~ "=" ~ exp).map {
-    case (dvar, dparam, dbody) => body => LetRec(dvar, Lambda(dparam, dbody), body)
-  })
-  
-  val escdecl = P[Exp => Exp](("esc" ~/ ident).map {
-    case escv => body => Escp(escv, body)
-  })
-
-  val decls = P[Exp => Exp]((valdecl | defdecl | escdecl).rep.map {
-    case ds => body => ds.foldRight(body)(_ apply _)
+  // TODO allow "def f1(x1) = b1 and f2(x2) = b2 and ... in body" -- mutual recursion;
+  // translate to "letrec foo = S<fun x1 => b1, fun x2 => b2, ...> in S(body)" where
+  // S is substitute foo.i for fi and foo is new;
+  // define <a1, a2, ...> = fun p => p(a1)(a2)..., so a.i is appl. to correct projection
+  // (but special-case single-recursion)
+  val defdecl = P((ident ~ "(" ~ ident ~ ")" ~ "=" ~ exp).map {
+    case (dvar, param, body) => (dvar, Lambda(param, body))
   })
 
-  val let = P[Exp](("let" ~/ decls ~ "in" ~ exp).map {
-    case (dfun, body) => dfun(body)
+  var seqNum: Int = 0
+
+  def gensym: Var = {
+    seqNum += 1
+    Var("_" + seqNum)
+  }
+
+  def proj(i: Int, n: Int): Exp = {
+    val xs = (0 until n) map {_ => gensym}
+    xs.foldRight[Exp](xs(i)){
+      case (x, r) => Lambda(x, r)
+    }
+  }
+
+  def tuple(as: Seq[Exp]): Exp = {
+    val p = gensym
+    Lambda(p, as.foldLeft[Exp](p)(Appl(_, _)))
+  }
+
+  def subst(a: Exp, dsubs: Map[String, Exp]): Exp = a match {
+    case Var(name) =>
+      dsubs.getOrElse(name, a)
+    case Appl(opr, opnd) =>
+      Appl(subst(opr, dsubs), subst(opnd, dsubs))
+    case Lambda(param, body) =>
+      Lambda(param, subst(body, dsubs - param.name))
+    case Cond(premise, conclusion, alternative) =>
+      Cond(subst(premise, dsubs), subst(conclusion, dsubs), subst(alternative, dsubs))
+    case LetRec(dvar, dexp, body) =>
+      LetRec(dvar, subst(dexp, dsubs - dvar.name).asInstanceOf[Lambda], subst(body, dsubs - dvar.name))
+    case Escp(escv, body) =>
+      Escp(escv, subst(body, dsubs - escv.name))
+    case _ => a
+  }
+
+  val defdecls = P[Exp](("def" ~/ defdecl.rep(1, sep = "and") ~ "in" ~ exp).map {
+    case (decls, body) =>
+      decls.toList match {
+        case (dvar, dexp) :: Nil => LetRec(dvar, dexp, body)
+        case _ =>
+          val n = decls.size
+          val dvars = decls map { _._1 }
+          val dexps = decls map { _._2 }
+          val cvar = gensym
+          val dsubs = (dvars.zipWithIndex map { case (v, i) => (v.name, Appl(cvar, proj(i, n))) }).toMap
+          val cexp = subst(tuple(dexps), dsubs).asInstanceOf[Lambda]
+          val cbody = subst(body, dsubs)
+          LetRec(cvar, cexp, cbody)
+      }
   })
 
-  val exp: Parser[Exp] = P(cond | fun | let | relexp)
-  
+  val escdecl = P[Exp](("esc" ~/ ident ~ "in" ~ exp).map {
+    case (escv, body) => Escp(escv, body)
+  })
+
+  val exp: Parser[Exp] = P(cond | fun | valdecl | defdecls | escdecl | relexp)
+
   def apply(in: String): Exp = (exp ~ End).parse(in).get.value
 }

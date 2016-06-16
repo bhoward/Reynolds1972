@@ -3,7 +3,7 @@ package bhoward.demo
 object Main extends App {
   import bhoward.interp._
 
-  val test = Parser("let def fib(n) = if n = 0 then 0 else if n = 1 then 1 else fib(n - 1) + fib(n - 2) in fib(20)")
+  val test = Parser("def fib(n) = if n = 0 then 0 else if n = 1 then 1 else fib(n - 1) + fib(n - 2) in fib(20)")
 
   def run(i: Interp): Unit = {
     println(i(test).show)
@@ -32,11 +32,19 @@ object Main extends App {
   println("Interpreter 4 -- continuations and HO functions (trampolined)")
   run(bhoward.interp4.Interp)
   
-  val test2 = Parser("6 * (let esc e def f(n) = if (n = 1) then e(7) else if (n / 2 * 2 = n) then f(n / 2) else f(3*n + 1) in f(27))")
+  val test2 = Parser("6 * (esc e in def f(n) = if n = 1 then e(7) else if n / 2 * 2 = n then f(n / 2) else f(3*n + 1) in f(27))")
   println(bhoward.interp3.Interp(test2).show)
   println(bhoward.interp3a.Interp(test2).show)
   println(bhoward.interp3b.Interp(test2).show)
   println(bhoward.interp4.Interp(test2).show)
+  
+  val test3 = Parser("def a(n) = if n = 0 then 42 else b(n - 1) and b(n) = if n = 0 then 37 else a(n - 1) in a(17)")
+  println(bhoward.interp1.Interp(test3).show)
+  println(bhoward.interp2.Interp(test3).show)
+  println(bhoward.interp3.Interp(test3).show)
+  println(bhoward.interp3a.Interp(test3).show)
+  println(bhoward.interp3b.Interp(test3).show)
+  println(bhoward.interp4.Interp(test3).show)
 }
 
 // TODO add assignments
