@@ -63,3 +63,7 @@ case class BoolVal(b: Boolean) extends Val {
 trait FunVal extends Val {
   def show: String = sys.error("Unable to show function values")
 }
+
+case class Ref(num: Int) extends Val {
+  def show: String = sys.error("Unable to show reference values")
+}

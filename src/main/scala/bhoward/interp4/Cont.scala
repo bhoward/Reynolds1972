@@ -4,6 +4,6 @@ import bhoward.interp._
 
 import scala.util.control.TailCalls._
 
-case class Cont(fun: Val => TailRec[Val]) {
-  def apply(a: Val): TailRec[Val] = tailcall(fun(a))
+case class Cont(fun: (Mem, Val) => TailRec[Val]) {
+  def apply(m: Mem, a: Val): TailRec[Val] = tailcall(fun(m, a))
 }

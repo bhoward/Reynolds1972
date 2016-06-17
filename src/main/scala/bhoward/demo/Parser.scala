@@ -44,7 +44,11 @@ object Parser {
     case (a, bs) => bs.foldLeft(a)(Appl(_, _))
   })
 
-  val factor = P[Exp](const | ident | "(" ~/ exp ~ ")")
+  val value = P[Exp](("@" ~/ factor).map {
+    case a => Appl(Var("val"), a)
+  })
+
+  val factor: Parser[Exp] = P[Exp](const | ident | "(" ~/ exp ~ ")" | value)
 
   val cond = P[Exp](("if" ~/ exp ~ "then" ~ exp ~ "else" ~ exp).map {
     case (premise, conclusion, alternative) => Cond(premise, conclusion, alternative)
@@ -58,7 +62,7 @@ object Parser {
     case (dvar, dexp, body) => Appl(Lambda(dvar, body), dexp)
   })
 
-  // TODO allow "def f1(x1) = b1 and f2(x2) = b2 and ... in body" -- mutual recursion;
+  // allow "def f1(x1) = b1 and f2(x2) = b2 and ... in body" -- mutual recursion;
   // translate to "letrec foo = S<fun x1 => b1, fun x2 => b2, ...> in S(body)" where
   // S is substitute foo.i for fi and foo is new;
   // define <a1, a2, ...> = fun p => p(a1)(a2)..., so a.i is appl. to correct projection
@@ -75,8 +79,8 @@ object Parser {
   }
 
   def proj(i: Int, n: Int): Exp = {
-    val xs = (0 until n) map {_ => gensym}
-    xs.foldRight[Exp](xs(i)){
+    val xs = (0 until n) map { _ => gensym }
+    xs.foldRight[Exp](xs(i)) {
       case (x, r) => Lambda(x, r)
     }
   }
@@ -122,7 +126,23 @@ object Parser {
     case (escv, body) => Escp(escv, body)
   })
 
-  val exp: Parser[Exp] = P(cond | fun | valdecl | defdecls | escdecl | relexp)
+  val vardecl = P[Exp](("var" ~/ ident ~ "=" ~ exp ~ "in" ~ exp).map {
+    case (refv, init, body) => Appl(Lambda(refv, body), Appl(Var("ref"), init))
+  })
+
+  val assign = P[Exp](("let" ~/ exp ~ ":=" ~ exp).map {
+    case (lhs, rhs) => Appl(Appl(Var("set"), lhs), rhs)
+  })
+
+  val sequence = P[Exp](("begin" ~/ exp.rep(sep=";") ~ "end").map {
+    case as => as.foldLeft[Exp](IntConst(0)) {
+      case (b, a) =>
+        val x = gensym
+        Appl(Lambda(x, a), b)
+    }
+  })
+
+  val exp: Parser[Exp] = P(cond | fun | valdecl | defdecls | escdecl | vardecl | assign | sequence | relexp)
 
   def apply(in: String): Exp = (exp ~ End).parse(in).get.value
 }

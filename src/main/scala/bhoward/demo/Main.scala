@@ -45,6 +45,9 @@ object Main extends App {
   println(bhoward.interp3a.Interp(test3).show)
   println(bhoward.interp3b.Interp(test3).show)
   println(bhoward.interp4.Interp(test3).show)
+  
+  val test4 = Parser("var x = 1 in begin let x := @x + 1; @x * @x end")
+  println(bhoward.interp4.Interp(test4).show)
 }
 
 // TODO add assignments
